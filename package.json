@@ -11,8 +11,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "tsx prisma/seed.ts",
-    "lint": "biome check ./src",
-    "lint:fix": "biome check --apply ./src",
+    "lint": "npx @biomejs/biome check ./src",
+    "lint:fix": "npx @biomejs/biome format --write ./src",
     "test": "npx prisma migrate reset --force && npm run prisma:seed && jest",
     "test:watch": "jest --watch",
     "test:cov": "npx prisma migrate reset --force && npm run prisma:seed && jest --coverage"
@@ -38,13 +38,13 @@
     "zod": "^3.24.3"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "@faker-js/faker": "^9.7.0",
     "@types/express": "^5.0.1",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.15.3",
     "@types/supertest": "^6.0.3",
     "@types/uuid": "^10.0.0",
-    "biome": "^0.3.3",
     "jest": "^29.7.0",
     "prisma": "^6.7.0",
     "supertest": "^7.1.0",
