@@ -1,25 +1,24 @@
-"use strict";
-
-import { Request, Response } from "express";
-import { container } from "@/core/diContainer";
-import { AppointmentService } from "@/services/appointment.service";
+import {
+	type CreateAppointmentDto,
+	type RescheduleAppointmentDto,
+	createAppointmentSchema,
+	rescheduleAppointmentSchema,
+} from "@/api/validators/appointment.validator";
 import {
 	Controller,
-	Post,
-	Put,
 	Delete,
 	Get,
+	Post,
+	Put,
 	ValidateBody,
 } from "@/core/decorators";
-import {
-	createAppointmentSchema,
-	CreateAppointmentDto,
-	rescheduleAppointmentSchema,
-	RescheduleAppointmentDto,
-} from "@/api/validators/appointment.validator";
+import { container } from "@/core/diContainer";
+import type { AppointmentService } from "@/services/appointment.service";
+import type { IController } from "@/types";
+import type { Request, Response } from "express";
 
 @Controller("/api/appointments")
-export class AppointmentController {
+export class AppointmentController implements IController {
 	#appointmentService: AppointmentService;
 
 	constructor() {
@@ -30,7 +29,7 @@ export class AppointmentController {
 	@Post("/")
 	@ValidateBody(createAppointmentSchema)
 	async createAppointment(
-		req: Request<{}, {}, CreateAppointmentDto>,
+		req: Request<Record<string, unknown>, CreateAppointmentDto>,
 		res: Response,
 	): Promise<void> {
 		const { patientId, providerId, startTime } = req.body;
@@ -55,7 +54,7 @@ export class AppointmentController {
 	@Put("/:appointmentId")
 	@ValidateBody(rescheduleAppointmentSchema)
 	async rescheduleAppointment(
-		req: Request<{ appointmentId: string }, {}, RescheduleAppointmentDto>,
+		req: Request<{ appointmentId: string }, RescheduleAppointmentDto>,
 		res: Response,
 	): Promise<void> {
 		const { appointmentId } = req.params;

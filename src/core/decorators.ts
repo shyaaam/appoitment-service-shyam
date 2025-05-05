@@ -1,9 +1,8 @@
-"use strict";
-
 import "reflect-metadata";
-import { Request, Response, NextFunction, Router } from "express";
-import { ZodSchema, ZodError } from "zod";
-import { ValidationError, BadRequestError, AppError } from "./errors"; // Import AppError
+import type { ControllerHandler, IController, Prototype } from "@/types";
+import type { NextFunction, Request, Response, Router } from "express";
+import { ZodError, type ZodSchema } from "zod";
+import { AppError, BadRequestError, ValidationError } from "./errors"; // Import AppError
 
 // --- Metadata Keys (using Symbols for uniqueness to prevent name collissions) ---
 const ROUTE_METADATA_KEY = Symbol("routeMetadata");
@@ -21,7 +20,7 @@ interface RouteDefinition {
 // --- Decorators ---
 
 export function Controller(path: string): ClassDecorator {
-	return (target: Function) => {
+	return (target: Prototype) => {
 		Reflect.defineMetadata(CONTROLLER_PATH_KEY, path, target);
 	};
 }
@@ -29,9 +28,9 @@ export function Controller(path: string): ClassDecorator {
 const createRouteDecorator =
 	(method: RouteDefinition["method"]) =>
 	(path: string): MethodDecorator => {
-		return (
-			target: any,
-			propertyKey: string | symbol,
+		return <T extends Prototype>(
+			target: T,
+			propertyKey: keyof T | string | symbol,
 			descriptor: PropertyDescriptor,
 		) => {
 			const routes: RouteDefinition[] =
@@ -40,7 +39,11 @@ const createRouteDecorator =
 			// This allows us to keep the route metadata clean and separate from validation logic
 			// NOTE: We could also use a more complex structure to store the schema here if needed
 			// but for now, we keep it simple.
-			routes.push({ path, method, handlerName: propertyKey });
+			routes.push({
+				path,
+				method,
+				handlerName: propertyKey as string | symbol,
+			});
 			Reflect.defineMetadata(ROUTE_METADATA_KEY, routes, target.constructor);
 		};
 	};
@@ -55,9 +58,9 @@ export const Delete = createRouteDecorator("delete");
  * using dedicated metadata.
  * @param schema - The Zod schema for validating req.body
  */
-export function ValidateBody(schema: ZodSchema<any>): MethodDecorator {
+export function ValidateBody(schema: ZodSchema<unknown>): MethodDecorator {
 	return (
-		target: any,
+		target: Prototype,
 		propertyKey: string | symbol,
 		descriptor: PropertyDescriptor,
 	) => {
@@ -71,8 +74,11 @@ export function ValidateBody(schema: ZodSchema<any>): MethodDecorator {
 
 // --- Router Registration Logic ---
 
-export function registerControllers(appOrRouter: Router, controllers: any[]) {
-	controllers.forEach((controllerClass) => {
+export function registerControllers(
+	appOrRouter: Router,
+	controllers: (new () => IController)[],
+) {
+	for (const controllerClass of controllers) {
 		// Instantiate using 'new' assumes parameterless constructor or resolution happens elsewhere (like our simple DI)
 		// If using a complex DI framework, you'd resolve the instance here.
 		const instance = new controllerClass();
@@ -88,23 +94,25 @@ export function registerControllers(appOrRouter: Router, controllers: any[]) {
 			return; // Skip if no routes defined
 		}
 
-		routes.forEach(({ path, method, handlerName }) => {
+		for (const { path, method, handlerName } of routes) {
 			const fullPath = basePath + path;
+
+			const methodHandlerFunc = instance[handlerName as keyof IController];
 			// Ensure the handler actually exists on the instance prototype
-			if (typeof instance[handlerName] !== "function") {
+			if (typeof methodHandlerFunc !== "function") {
 				console.error(
 					`Handler ${String(handlerName)} not found on controller ${controllerClass.name}`,
 				);
 				return;
 			}
-			const handler = instance[handlerName].bind(instance);
+			const handler = (methodHandlerFunc as ControllerHandler).bind(instance);
 
 			// *** Explicitly retrieve the schema using the dedicated key from the method ***
 			const validationSchema = Reflect.getMetadata(
 				VALIDATION_SCHEMA_KEY,
 				instance,
 				handlerName,
-			) as ZodSchema<any> | undefined;
+			) as ZodSchema<unknown> | undefined;
 
 			// Middleware for validation
 			// For a prod app, middlewares should be more robust, potentially using a library like express-validator or similar
@@ -169,18 +177,18 @@ export function registerControllers(appOrRouter: Router, controllers: any[]) {
 					}
 				},
 			);
-		});
-	});
+		}
+	}
 }
 
 // --- Simple Memoization Decorator ---
 // NOTE: Basic in-memory memoization. Consider cache size, invalidation strategies.
-const memoizationCache = new Map<string, { value: any; expiry: number }>();
+const memoizationCache = new Map<string, { value: unknown; expiry: number }>();
 const MEMOIZE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 export function Memoize(ttlMs: number = MEMOIZE_TTL_MS): MethodDecorator {
 	return (
-		target: any,
+		target: unknown,
 		propertyKey: string | symbol,
 		descriptor: PropertyDescriptor,
 	) => {
@@ -189,7 +197,7 @@ export function Memoize(ttlMs: number = MEMOIZE_TTL_MS): MethodDecorator {
 			throw new Error("@Memoize can only be applied to methods.");
 		}
 
-		descriptor.value = function (...args: any[]) {
+		descriptor.value = function (...args: unknown[]) {
 			// Simple key generation based on function name and stringified args.
 			// Might not be robust for complex objects.
 			const cacheKey = `memo_${String(propertyKey)}_${JSON.stringify(args)}`;
@@ -226,14 +234,14 @@ export function Memoize(ttlMs: number = MEMOIZE_TTL_MS): MethodDecorator {
 						// Don't cache errors by default, or handle specific cacheable errors
 						throw err;
 					});
-			} else {
-				// Cache synchronous results
-				memoizationCache.set(cacheKey, { value: result, expiry: now + ttlMs });
-				if (Math.random() < 0.05) {
-					/* ... cleanup ... */
-				}
-				return result;
 			}
+
+			// Cache synchronous results
+			memoizationCache.set(cacheKey, { value: result, expiry: now + ttlMs });
+			if (Math.random() < 0.05) {
+				/* ... cleanup ... */
+			}
+			return result;
 		};
 	};
 }

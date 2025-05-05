@@ -1,5 +1,3 @@
-"use strict";
-
 import { AppError } from "./errors";
 
 // Very simple Map-based Dependency Injection Container

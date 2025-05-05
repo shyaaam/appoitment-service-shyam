@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 // Instantiate Prisma Client once
 const prisma = new PrismaClient({
-	// log: ['query', 'info', 'warn', 'error'], // Optional logging
+	// log: ['query', 'info', 'warn', 'error'],
 });
 
 export default prisma;

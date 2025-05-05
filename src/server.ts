@@ -1,7 +1,5 @@
-"use strict";
-
 import "reflect-metadata";
-import http from "http";
+import http from "node:http";
 import { createApp } from "./app";
 import { config } from "./config";
 

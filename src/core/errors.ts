@@ -1,18 +1,16 @@
-"use strict";
-
-import { ZodError } from "zod";
+import type { ZodError } from "zod";
 
 // Base class for custom application errors
 export class AppError extends Error {
 	public readonly statusCode: number;
 	public readonly code: string;
-	public readonly details?: any;
+	public readonly details?: Record<string, unknown> | string | ZodError;
 
 	constructor(
 		message: string,
 		statusCode: number,
 		code: string,
-		details?: any,
+		details?: Record<string, unknown> | string | ZodError,
 	) {
 		super(message);
 		this.statusCode = statusCode;

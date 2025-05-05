@@ -1,18 +1,17 @@
-"use strict";
-
-import { Request, Response } from "express";
-import { container } from "@/core/diContainer";
-import { ProviderService } from "@/services/provider.service";
-import { Controller, Post, Get, ValidateBody } from "@/core/decorators";
 import {
-	upsertScheduleSchema,
+	type GetAvailabilityDto,
+	type UpsertScheduleDto,
 	getAvailabilitySchema,
-	UpsertScheduleDto,
-	GetAvailabilityDto,
+	upsertScheduleSchema,
 } from "@/api/validators/provider.validator";
+import { Controller, Get, Post, ValidateBody } from "@/core/decorators";
+import { container } from "@/core/diContainer";
+import type { ProviderService } from "@/services/provider.service";
+import type { AvailabilityResult, IController } from "@/types";
+import type { Request, Response } from "express";
 
 @Controller("/api/providers")
-export class ProviderController {
+export class ProviderController implements IController {
 	#providerService: ProviderService;
 
 	constructor() {
@@ -24,7 +23,7 @@ export class ProviderController {
 	@Post("/:providerId/schedule")
 	@ValidateBody(upsertScheduleSchema)
 	async upsertSchedule(
-		req: Request<{ providerId: string }, {}, UpsertScheduleDto>,
+		req: Request<{ providerId: string }, UpsertScheduleDto>,
 		res: Response,
 	): Promise<void> {
 		const { providerId } = req.params;
@@ -44,7 +43,7 @@ export class ProviderController {
 
 	@Get("/:providerId/availability")
 	async getAvailability(
-		req: Request<{ providerId: string }, {}, {}, GetAvailabilityDto>,
+		req: Request<{ providerId: string }, GetAvailabilityDto>,
 		res: Response,
 	): Promise<void> {
 		// Basic validation of query params (more robust with Zod middleware if complex)
@@ -60,7 +59,7 @@ export class ProviderController {
 		const query = validationResult.data;
 		const { providerId } = req.params;
 
-		let result;
+		let result: AvailabilityResult;
 		if (query.date) {
 			const slots = await this.#providerService.getAvailableSlotsForDate(
 				providerId,

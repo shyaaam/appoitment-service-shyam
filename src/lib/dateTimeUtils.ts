@@ -1,5 +1,4 @@
-"use strict";
-
+import type { IANATimezone } from "@/types";
 import {
 	addMinutes,
 	format,
@@ -15,7 +14,6 @@ import {
 	toDate,
 } from "date-fns";
 import { formatInTimeZone, fromZonedTime, toZonedTime } from "date-fns-tz";
-import { IANATimezone } from "@/types";
 
 const DAYS_OF_WEEK = [
 	"SUNDAY",
@@ -52,8 +50,8 @@ export function getUTCDateTimeLocal(
 ): Date {
 	const localDate = startOfDay(date); // Start with the date part
 	const zonedDate = toZonedTime(localDate, timezone); // Interpret as start of day in target timezone
-	let dtWithHours = setHours(zonedDate, hours);
-	let dtWithMinutes = setMinutes(dtWithHours, minutes);
+	const dtWithHours = setHours(zonedDate, hours);
+	const dtWithMinutes = setMinutes(dtWithHours, minutes);
 	return fromZonedTime(dtWithMinutes, timezone); // Convert back to UTC Date object
 }
 

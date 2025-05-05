@@ -1,5 +1,3 @@
-"use strict";
-
 import { z } from "zod";
 
 // ISO 8601 DateTime string (basic check)
