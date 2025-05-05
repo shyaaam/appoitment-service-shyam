@@ -4,45 +4,46 @@
     # Set working directory
     WORKDIR /app
     
-    # Copy package files and install all dependencies (including devDependencies)
+    # Copy all necessary files for building
     COPY package*.json ./
-    RUN npm install
-    
-    # Copy the rest of the application code
     COPY tsconfig.json ./
     COPY prisma ./prisma/
     COPY src ./src/
     
-    # Generate Prisma Client
+    # Install ALL dependencies (including devDependencies)
+    RUN npm install
+    
+    # Generate Prisma Client (important!)
     RUN npx prisma generate
     
-    # Build the TypeScript code
+    # Build TypeScript code
     RUN npm run build
     
-    # ---- Production Stage ----
-    FROM node:20-alpine AS production
+    # Remove development dependencies after build
+    RUN npm prune --production
+    
+    
+    # ---- Base Stage ----
+    FROM node:20-alpine AS base
     
     # Set working directory
     WORKDIR /app
     
-    # Copy package.json for npm start command
-    COPY --from=builder /app/package*.json ./
-    
-    # Copy only production dependencies from the builder stage
+    # Copy production dependencies from the builder stage
     COPY --from=builder /app/node_modules ./node_modules
     
-    # Copy Prisma Client
+    # Copy Prisma Client from the builder stage
     COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
     COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
     
-    # Copy the built application code
+    # Copy built application code from the builder stage
     COPY --from=builder /app/dist ./dist
-    
-    # Copy Prisma schema (if migrations or runtime Prisma operations are needed)
+
+    # Copy Prisma schema (important for migrations and runtime Prisma operations)
     COPY --from=builder /app/prisma ./prisma
     
     # Expose the application port
-    EXPOSE 3000
+    EXPOSE 3001
     
     # Command to run the application
-    CMD ["npm", "run", "start"]
+    CMD ["node", "dist/server.js"]

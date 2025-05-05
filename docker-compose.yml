@@ -25,16 +25,16 @@ services:
         postgres-db:
             condition: service_healthy # Wait for DB to be ready
     ports:
-      - "3000:3000" # Map host port 3000 to container port 3000
+      - "3001:3001" # Map host port 3001 to container port 3001
     environment:
       - DATABASE_URL=postgresql://user:password@postgres-db:5432/appointmentdb?schema=public
-      - PORT=3000
+      - PORT=3001
       # Add other environment variables as needed
       - NODE_ENV=production # Set environment to production
     # Command to run migrations on startup before starting the app
     # Using a simple entrypoint script or handle retries within the app might be more robust
-    command: >
-      sh -c "npx prisma migrate deploy && node dist/server.js"
+    # command: >
+      # sh -c "npx prisma migrate deploy && node dist/server.js"
 
 volumes:
   postgres_data: # Define the named volume for persistence
