@@ -38,8 +38,11 @@ export type Prototype = object;
 // But this interface is more about being a marker for DI or other purposes, and also allows for future extension as logic grows.
 // An empty interface is used to indicate that this is a marker interface and can be written as an empty object.
 export type IController = Prototype;
+
+// The below biome lint suppression is not working due to a bug in the biome library.
+// biome-ignore lint/suspicious/noExplicitAny: Suppressing 'any' type for this block
 export type ControllerHandler = (
-	req: Request,
-	res: Response,
+	req: Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>,
+	res: Response<any, Record<string, any>>,
 	next?: NextFunction,
 ) => Promise<void> | void;
