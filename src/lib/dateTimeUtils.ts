@@ -3,7 +3,6 @@
 
 import {
   addMinutes,
-  // eachMinuteOfInterval, // Not used currently
   format,
   getDay,
   isAfter,
@@ -137,7 +136,6 @@ export function isSlotBooked(
 
 /**
  * Converts a UTC Date to a date string "YYYY-MM-DD" in a given timezone.
- * Uses date-fns-tz v3 approach.
  */
 export function formatUTCDateOnly(utcDate: Date, timezone: IANATimezone): string {
   return formatInTimeZone(utcDate, timezone, 'yyyy-MM-dd');
@@ -146,7 +144,6 @@ export function formatUTCDateOnly(utcDate: Date, timezone: IANATimezone): string
 
 /**
  * Get the start of the day in UTC for a given date string and timezone.
- * Uses date-fns-tz v3 approach.
  */
 export function getStartOfDayUTC(dateStr: string, timezone: IANATimezone): Date {
     const dateTimeStr = `${dateStr}T00:00:00`;
