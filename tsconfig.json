@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+      "target": "ES2022", // Use modern ES features
+      "module": "CommonJS",
+      "outDir": "./dist",
+      "rootDir": "./src",
+      "strict": true,
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "experimentalDecorators": true, // Enable decorators
+      "emitDecoratorMetadata": true, // Required for parameter decorators / type reflection
+      "moduleResolution": "node",
+      "resolveJsonModule": true,
+      "sourceMap": true, // Useful for debugging
+      "baseUrl": "./", // Allows absolute paths from src
+      "paths": {
+        "@/*": ["src/*"],
+        "@tests/*": ["tests/*"]
+      },
+      "typeRoots": ["./src/types/*", "node_modules/@types"],
+      "declaration": true // to generate .d.ts files
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "tests/**/*", "scripts/**/*"]
+  }

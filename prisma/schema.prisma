@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Provider {
+  id                  String             @id @default(uuid())
+  timezone            String             @default("UTC")
+  appointmentDuration Int                @default(30) // Default duration in minutes
+  schedules           ProviderSchedule[]
+  appointments        Appointment[]
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+}
+
+model ProviderSchedule {
+  id          String   @id @default(uuid())
+  provider    Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  providerId  String
+  dayOfWeek   String // e.g., "MONDAY", "TUESDAY"
+  startTime   String // "HH:mm" format in provider's timezone
+  endTime     String // "HH:mm" format in provider's timezone
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([providerId, dayOfWeek]) // Ensure only one schedule per day per provider
+}
+
+model Appointment {
+  id         String   @id @default(uuid())
+  patientId  String
+  provider   Provider @relation(fields: [providerId], references: [id])
+  providerId String
+  startTime  DateTime // Stored in UTC
+  endTime    DateTime // Stored in UTC
+  status     AppointmentStatus @default(CONFIRMED)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  // Optional: version Int @default(1) // For optimistic concurrency control if needed later
+
+  @@unique([providerId, startTime]) // Prevent double booking for the same provider at the exact start time
+  @@index([providerId, startTime, endTime]) // Index for availability checks
+  @@index([patientId])
+}
+
+enum AppointmentStatus {
+  CONFIRMED
+  CANCELLED
+  RESCHEDULED
+  NO_SHOW
+  // Could add PENDING, COMPLETED etc. later
+}
