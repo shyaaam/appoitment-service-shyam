@@ -292,67 +292,59 @@ This section highlights areas crucial for operating this service reliably in pro
 ## System Diagram
 ```mermaid
 graph TD
-    subgraph "Client Layer"
-        C[Client (Web/Mobile App)]
+    subgraph Client Layer
+        C["Client (Web/Mobile App)"]
     end
 
-    subgraph "API Layer"
-        LB[Load Balancer / API Gateway]
+    subgraph API Layer
+        LB["Load Balancer / API Gateway (External)"]
     end
 
-    subgraph "Application Layer (Booking Service - Node.js/Express)"
-        API[REST API (Controllers w/ Decorators)]
-        MIDDLEWARE[Middleware (AuthN/Z, Validation, Error Handling)]
-        SVC[Services (Provider, Appointment, Event, Concurrency)]
-        REPO[Repositories (Prisma)]
+    subgraph Application Layer Booking Service
+        API["REST API (Controllers + Decorators)"]
+        MIDDLEWARE["Middleware (Validation, Error Handling)"]
+        SVC["Services (Provider, Appointment, Event, Concurrency)"]
+        REPO["Repositories (Prisma)"]
         DI[DI Container]
         EVT_SVC[Event Service Wrapper]
-        CONCUR_SVC[Concurrency Service (Mock/Redis)]
+        CONCUR_SVC["Concurrency Service (In-Memory Mock)"]
     end
 
-    subgraph "Data Layer"
-        DB[(PostgreSQL Database)]
-        CACHE[(Redis - Optional for Locks/Cache)]
+    subgraph Data Layer
+        DB([PostgreSQL Database])
     end
 
-    subgraph "Eventing Layer"
-        BUS{Event Bus (Local EventEmitter - Mock)}
-        ALT_BUS[("Kafka / RabbitMQ / SQS")] -- Optional --> DS
+    subgraph Eventing Layer
+        BUS{"Event Bus (Local EventEmitter Mock)"}
     end
 
-    subgraph "Downstream Systems"
-        DS[Notification Service, Calendar Sync, etc.]
+    subgraph Downstream Systems
+        DS["Downstream System (Conceptual)"]
     end
 
-    %% --- Data Flow ---
     C -- HTTPS Request --> LB;
     LB -- Forwarded Request --> API;
-    API -- Uses --> MIDDLEWARE -- Processes Request/Response --> API;
-    API -- Uses --> DI -- Resolves --> SVC;
-    SVC -- Uses --> DI -- Resolves --> REPO;
-    SVC -- Uses --> DI -- Resolves --> EVT_SVC;
-    SVC -- Uses --> DI -- Resolves --> CONCUR_SVC;
+    API -- Uses --> MIDDLEWARE;
+    MIDDLEWARE -- Processes --> API;
+    API -- Resolves via --> DI;
+    DI -- Provides --> SVC;
+    SVC -- Resolves via --> DI;
+    DI -- Provides --> REPO;
+    DI -- Provides --> EVT_SVC;
+    DI -- Provides --> CONCUR_SVC;
 
-    %% --- Service Interactions ---
-    SVC -- Calls Methods --> REPO;
-    SVC -- Calls Methods --> CONCUR_SVC;
-    CONCUR_SVC -- (Optional) Interacts --> CACHE;
-    REPO -- Interacts (CRUD) --> DB;
+    SVC -- Calls --> REPO;
+    SVC -- Calls --> CONCUR_SVC;
+    REPO -- CRUD --> DB;
 
-    %% --- Event Flow ---
-    SVC -- Triggers Event --> EVT_SVC;
-    EVT_SVC -- Emits Event --> BUS;
-    BUS -.-> DS; // Mock Local Consumption or Downstream
-    style ALT_BUS stroke-dasharray: 5 5, fill:#f9f, stroke:#333, stroke-width:2px; // Style optional external bus
+    SVC -- Triggers --> EVT_SVC;
+    EVT_SVC -- Emits to --> BUS;
+    BUS -.-> DS;
 
-    %% --- Response Flow ---
     DB -- Returns Data --> REPO;
-    CACHE -- (Optional) Returns Data --> CONCUR_SVC;
     REPO -- Returns Data --> SVC;
     CONCUR_SVC -- Returns Result --> SVC;
-    SVC -- Returns Response/Data --> API;
+    SVC -- Returns Data --> API;
     API -- Sends Response --> LB;
     LB -- HTTPS Response --> C;
 
-    %% --- Styling ---
-    style CACHE stroke-dasharray: 5 5, fill:#ccf, stroke:#333, stroke-width:2px;
