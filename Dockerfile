@@ -41,9 +41,9 @@
 
     # Copy Prisma schema (important for migrations and runtime Prisma operations)
     COPY --from=builder /app/prisma ./prisma
-    
+
+    # Apply database migrations and start the application
+    CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]
+
     # Expose the application port
     EXPOSE 3001
-    
-    # Command to run the application
-    CMD ["node", "dist/server.js"]

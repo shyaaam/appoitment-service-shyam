@@ -65,7 +65,7 @@ Finally, ensuring robust **validation** (especially for IANA timezones) and sett
     Ensure your database schema is created and up-to-date.
     ```bash
     # Create/update schema based on prisma/schema.prisma (development)
-    npx prisma migrate dev --name <your-migration-name>
+    npm run prisma:migrate
 
     # OR ensure DB matches schema (for environments where docker-compose runs deploy):
     # npx prisma db push # (Use with caution, primarily dev only)

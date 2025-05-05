@@ -144,7 +144,7 @@ export class AppointmentService {
 		}
 		// Check if new time is same as old time
 		if (isEqual(newStartTimeUTC, previousStartTime)) {
-			return existingAppointment; // No change needed
+			return existingAppointment;
 		}
 
 		// Generate lock key for the *new* target time slot

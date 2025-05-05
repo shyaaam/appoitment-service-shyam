@@ -28,7 +28,6 @@ const DAYS_OF_WEEK = [
 /**
  * Converts a date string ("YYYY-MM-DD") and time string ("HH:mm") in a specific timezone
  * into a UTC Date object.
- * Uses date-fns-tz v3 approach.
  */
 export function getUTCDateTime(
 	dateStr: string,
@@ -57,7 +56,6 @@ export function getUTCDateTimeLocal(
 
 /**
  * Converts a UTC Date object back to a time string ("HH:mm") in a specific timezone.
- * Uses date-fns-tz v3 approach.
  */
 export function formatUTCTime(utcDate: Date, timezone: IANATimezone): string {
 	// Directly format the UTC date into the target timezone's HH:mm representation
@@ -67,7 +65,6 @@ export function formatUTCTime(utcDate: Date, timezone: IANATimezone): string {
 /**
  * Generates potential appointment slots within a time range for a specific day.
  * Uses Generators for potentially better memory efficiency if ranges were huge.
- * (No change needed here as it relies on getUTCDateTime which is refactored)
  */
 export function* generateTimeSlots(
 	dayStartTimeStr: string, // "HH:mm"
@@ -91,7 +88,6 @@ export function* generateTimeSlots(
 
 /**
  * Gets the day of the week string (e.g., "MONDAY") from a Date object.
- * (No timezone dependency here, uses the Date object's internal day index)
  */
 export function getDayOfWeekString(date: Date): string {
 	const dayIndex = getDay(date); // 0 for Sunday, 1 for Monday, etc.
@@ -100,7 +96,6 @@ export function getDayOfWeekString(date: Date): string {
 
 /**
  * Checks if a specific time slot (UTC) is booked among a list of appointments.
- * (No change needed here)
  */
 export function isSlotBooked(
 	slotTimeUTC: Date,
